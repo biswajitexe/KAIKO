@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import { MangaCard, ContentRow } from "@/components";
-import { LATEST_MANGA_UPDATES } from "@/lib/mock-data";
+import { getTopManhwa, getLatestManga } from "@/lib/data-loader";
 
 export const metadata: Metadata = {
   title: "Manga & Manhwa Webtoon Catalog — KAIYO",
   description: "Read the latest ongoing manga chapters, vertical-scroll manhwa webtoons, and top-rated serializations.",
 };
 
-export default function MangaCatalogPage() {
-  const manhwaItems = LATEST_MANGA_UPDATES.filter((m) => m.type === "MANHWA");
-  const mangaItems = LATEST_MANGA_UPDATES.filter((m) => m.type === "MANGA");
+export const revalidate = 300;
+
+export default async function MangaCatalogPage() {
+  const [manhwaItems, allManga] = await Promise.all([
+    getTopManhwa(12),
+    getLatestManga(24),
+  ]);
 
   return (
     <div className="flex flex-col gap-8 max-w-container mx-auto pb-16">
@@ -22,7 +26,7 @@ export default function MangaCatalogPage() {
           Explore Manga & Manhwa
         </h1>
         <p className="text-14 text-text-secondary max-w-2xl">
-          Dive into continuous long-strip manhwa, classic weekly manga chapters, and webtoons with full-color reading experiences.
+          Dive into continuous long-strip manhwa, classic weekly manga chapters, and webtoons with live official MyAnimeList catalog updates.
         </p>
       </div>
 
@@ -30,7 +34,7 @@ export default function MangaCatalogPage() {
       <ContentRow
         title="Trending Korean Manhwa & Webtoons"
         subtitle="Full-color continuous vertical reading"
-        viewAllHref="/browse"
+        viewAllHref="/browse?type=MANHWA"
       >
         {manhwaItems.map((manhwa) => (
           <MangaCard
@@ -46,16 +50,16 @@ export default function MangaCatalogPage() {
         <div className="flex items-baseline justify-between border-b border-border pb-3">
           <div>
             <h2 className="text-20 font-bold text-text-primary">
-              All Manga & Manhwa Series ({LATEST_MANGA_UPDATES.length})
+              All Top Manga Series ({allManga.length})
             </h2>
             <p className="text-12 text-text-muted">
-              Updated hourly with high-definition scans and official translations
+              Live ranking and official updates from MyAnimeList
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
-          {LATEST_MANGA_UPDATES.map((manga) => (
+          {allManga.map((manga) => (
             <MangaCard
               key={manga.id}
               item={manga}
@@ -70,11 +74,11 @@ export default function MangaCatalogPage() {
       <ContentRow
         title="Popular Japanese Manga"
         subtitle="Shounen, Dark Fantasy, and Action serializations"
-        viewAllHref="/browse"
+        viewAllHref="/browse?type=MANGA"
       >
-        {mangaItems.map((manga) => (
+        {allManga.slice(0, 10).map((manga) => (
           <MangaCard
-            key={manga.id}
+            key={`list-${manga.id}`}
             item={manga}
             variant="list"
           />

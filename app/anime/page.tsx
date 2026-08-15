@@ -1,15 +1,24 @@
 import type { Metadata } from "next";
 import { AnimeCard, ContentRow } from "@/components";
-import { TRENDING_ANIME } from "@/lib/mock-data";
+import {
+  getAiringAnime,
+  getTrendingAnime,
+  getUpcomingAnime,
+} from "@/lib/data-loader";
 
 export const metadata: Metadata = {
   title: "Anime Catalog & Seasonal Streams — KAIYO",
   description: "Browse trending seasonal anime, top-rated TV series, movies, and upcoming premieres.",
 };
 
-export default function AnimeCatalogPage() {
-  const airingAnime = TRENDING_ANIME.filter((a) => a.status === "AIRING");
-  const upcomingAnime = TRENDING_ANIME.filter((a) => a.status === "UPCOMING");
+export const revalidate = 300;
+
+export default async function AnimeCatalogPage() {
+  const [airingAnime, allAnime, upcomingAnime] = await Promise.all([
+    getAiringAnime(12),
+    getTrendingAnime(24),
+    getUpcomingAnime(12),
+  ]);
 
   return (
     <div className="flex flex-col gap-8 max-w-container mx-auto pb-16">
@@ -22,7 +31,7 @@ export default function AnimeCatalogPage() {
           Explore All Anime
         </h1>
         <p className="text-14 text-text-secondary max-w-2xl">
-          Watch seasonal broadcast anime, legendary classics, movies, and OVAs in ultra-high quality.
+          Watch seasonal broadcast anime, legendary classics, movies, and OVAs with live MyAnimeList data.
         </p>
       </div>
 
@@ -30,7 +39,7 @@ export default function AnimeCatalogPage() {
       <ContentRow
         title="Airing This Season"
         subtitle="Currently broadcasting weekly simulcasts"
-        viewAllHref="/browse"
+        viewAllHref="/browse?type=ANIME"
       >
         {airingAnime.map((anime) => (
           <AnimeCard key={anime.id} item={anime} />
@@ -42,16 +51,16 @@ export default function AnimeCatalogPage() {
         <div className="flex items-baseline justify-between border-b border-border pb-3">
           <div>
             <h2 className="text-20 font-bold text-text-primary">
-              All Featured Anime ({TRENDING_ANIME.length})
+              All Top Rated Anime ({allAnime.length})
             </h2>
             <p className="text-12 text-text-muted">
-              Explore highest rated and trending TV series
+              Live ranking from global community scores
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
-          {TRENDING_ANIME.map((anime) => (
+          {allAnime.map((anime) => (
             <AnimeCard key={anime.id} item={anime} className="w-full" />
           ))}
         </div>
@@ -61,7 +70,7 @@ export default function AnimeCatalogPage() {
       <ContentRow
         title="Upcoming & Most Anticipated"
         subtitle="Blockbuster movies and next season premieres"
-        viewAllHref="/browse"
+        viewAllHref="/browse?type=ANIME"
       >
         {upcomingAnime.map((anime) => (
           <AnimeCard key={anime.id} item={anime} />

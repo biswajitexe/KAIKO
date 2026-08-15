@@ -5,35 +5,45 @@ import {
   MangaCard,
 } from "@/components";
 import {
-  FEATURED_ITEMS,
-  LATEST_MANGA_UPDATES,
-  TRENDING_ANIME,
-} from "@/lib/mock-data";
+  getFeaturedHeroItems,
+  getTrendingAnime,
+  getLatestManga,
+  getAiringAnime,
+} from "@/lib/data-loader";
 
-export default function HomePage() {
+export const revalidate = 300; // Cache and revalidate every 5 minutes
+
+export default async function HomePage() {
+  const [heroItems, trendingAnime, latestManga, airingAnime] = await Promise.all([
+    getFeaturedHeroItems(),
+    getTrendingAnime(12),
+    getLatestManga(12),
+    getAiringAnime(12),
+  ]);
+
   return (
     <div className="flex flex-col gap-6 w-full">
-      {/* Featured Titles Hero Carousel */}
-      <HeroCarousel items={FEATURED_ITEMS} />
+      {/* Featured Titles Hero Carousel from MAL */}
+      <HeroCarousel items={heroItems} />
 
       {/* Trending Anime Horizontal Row */}
       <ContentRow
         title="Trending Anime"
-        subtitle="Most watched in the community this week"
-        viewAllHref="/anime/trending"
+        subtitle="Live community ranking & most watched"
+        viewAllHref="/browse?type=ANIME"
       >
-        {TRENDING_ANIME.map((anime) => (
+        {trendingAnime.map((anime) => (
           <AnimeCard key={anime.id} item={anime} />
         ))}
       </ContentRow>
 
       {/* Latest Manga & Manhwa Updates Row */}
       <ContentRow
-        title="Latest Manga & Manhwa Updates"
-        subtitle="New chapters released today"
-        viewAllHref="/manga/latest"
+        title="Top Rated Manga & Manhwa"
+        subtitle="Global serialization highlights"
+        viewAllHref="/browse?type=MANGA"
       >
-        {LATEST_MANGA_UPDATES.map((manga) => (
+        {latestManga.map((manga) => (
           <MangaCard key={manga.id} item={manga} />
         ))}
       </ContentRow>
@@ -41,14 +51,12 @@ export default function HomePage() {
       {/* Top Airing This Season Row */}
       <ContentRow
         title="Top Airing This Season"
-        subtitle="Winter 2025 seasonal highlights"
-        viewAllHref="/anime/season"
+        subtitle="Currently broadcasting weekly simulcasts"
+        viewAllHref="/anime"
       >
-        {TRENDING_ANIME.slice()
-          .reverse()
-          .map((anime) => (
-            <AnimeCard key={`season-${anime.id}`} item={anime} />
-          ))}
+        {airingAnime.map((anime) => (
+          <AnimeCard key={`season-${anime.id}`} item={anime} />
+        ))}
       </ContentRow>
     </div>
   );
