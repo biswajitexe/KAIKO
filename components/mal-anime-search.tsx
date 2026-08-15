@@ -90,41 +90,45 @@ export function MALAnimeSearch() {
       {/* Grid Results */}
       {results.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-          {results.map((anime) => (
-            <div
-              key={anime.id}
-              className="group flex flex-col p-2.5 rounded-md bg-surface-elevated border border-border hover:border-accent transition-all duration-normal"
-            >
-              {/* Poster */}
-              <div className="relative aspect-[2/3] w-full rounded-sm overflow-hidden bg-bg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={anime.main_picture?.large || anime.main_picture?.medium}
-                  alt={anime.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-normal"
-                />
-                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-sm bg-bg/90 backdrop-blur-sm border border-border text-[10px] font-bold text-text-secondary uppercase">
-                  {anime.media_type || "TV"}
+          {results.map((anime) => {
+            const slug = `${anime.title.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-")}-${anime.id}`;
+            return (
+              <Link
+                key={anime.id}
+                href={`/anime/${slug}`}
+                className="group flex flex-col p-2.5 rounded-md bg-surface-elevated border border-border hover:border-accent hover:-translate-y-1 transition-all duration-normal"
+              >
+                {/* Poster */}
+                <div className="relative aspect-[2/3] w-full rounded-sm overflow-hidden bg-bg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={anime.main_picture?.large || anime.main_picture?.medium}
+                    alt={anime.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-normal"
+                  />
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-sm bg-bg/90 backdrop-blur-sm border border-border text-[10px] font-bold text-text-secondary uppercase">
+                    {anime.media_type || "TV"}
+                  </div>
                 </div>
-              </div>
 
-              {/* Title & Info */}
-              <div className="flex flex-col justify-between flex-1 mt-2.5 gap-1">
-                <h4 className="text-14 font-bold text-text-primary line-clamp-1 group-hover:text-accent transition-colors">
-                  {anime.title}
-                </h4>
+                {/* Title & Info */}
+                <div className="flex flex-col justify-between flex-1 mt-2.5 gap-1">
+                  <h4 className="text-14 font-bold text-text-primary line-clamp-1 group-hover:text-accent transition-colors">
+                    {anime.title}
+                  </h4>
 
-                <div className="flex items-center justify-between text-12 text-text-muted pt-1 border-t border-border/50">
-                  <span className="flex items-center gap-1 font-semibold text-accent">
-                    <StarIcon className="w-3 h-3 fill-current" />
-                    {anime.mean ? anime.mean.toFixed(1) : "N/A"}
-                  </span>
-                  <span>{anime.num_episodes || "?"} eps</span>
+                  <div className="flex items-center justify-between text-12 text-text-muted pt-1 border-t border-border/50">
+                    <span className="flex items-center gap-1 font-semibold text-accent">
+                      <StarIcon className="w-3 h-3 fill-current" />
+                      {anime.mean ? anime.mean.toFixed(1) : "N/A"}
+                    </span>
+                    <span>{anime.num_episodes || "?"} eps</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

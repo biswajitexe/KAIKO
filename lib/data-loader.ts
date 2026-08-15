@@ -158,11 +158,11 @@ function generateEpisodesList(totalEpisodes: number, coverImage: string, title: 
     return {
       id: `ep-${epNum}`,
       number: epNum,
-      title: `Episode ${epNum}: The Journey Begins`,
+      title: totalEpisodes === 1 ? title : `${title} — Episode ${epNum}`,
       thumbnail: coverImage,
       duration: "24m",
-      airDate: "Broadcast Premiere",
-      description: `Watch Episode ${epNum} of ${title} with high-definition streaming and multi-language subtitles.`,
+      airDate: "Official Simulcast",
+      description: `Watch Episode ${epNum} of ${title} in 1080p Full HD with English and multi-language subtitles.`,
       progressPercentage: epNum === 1 ? 65 : 0,
     };
   });

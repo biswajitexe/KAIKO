@@ -97,11 +97,7 @@ export function MangaCard({
             alt={item.title}
             loading="lazy"
             referrerPolicy="no-referrer"
-            onLoad={() => setImageLoaded(true)}
-            className={cn(
-              "w-full h-full object-cover transition-transform duration-slow group-hover:scale-105",
-              imageLoaded ? "opacity-100" : "opacity-0"
-            )}
+            className="w-full h-full object-cover transition-transform duration-slow group-hover:scale-105"
           />
           <span className="absolute bottom-1 left-1 px-1 py-0.2 text-[10px] font-bold tracking-wider text-text-primary bg-bg/90 backdrop-blur-sm rounded-sm uppercase">
             {item.type}
@@ -156,11 +152,7 @@ export function MangaCard({
           alt={item.title}
           loading="lazy"
           referrerPolicy="no-referrer"
-          onLoad={() => setImageLoaded(true)}
-          className={cn(
-            "w-full h-full object-cover object-center transition-all duration-slow group-hover:scale-105",
-            imageLoaded ? "opacity-100" : "opacity-0"
-          )}
+          className="w-full h-full object-cover object-center transition-transform duration-slow group-hover:scale-105"
         />
 
         {/* Top Badges (Always visible) */}

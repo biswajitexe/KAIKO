@@ -71,11 +71,7 @@ export function AnimeCard({ item, isLoading, className }: AnimeCardProps) {
           alt={item.title}
           loading="lazy"
           referrerPolicy="no-referrer"
-          onLoad={() => setImageLoaded(true)}
-          className={cn(
-            "w-full h-full object-cover object-center transition-all duration-slow group-hover:scale-105",
-            imageLoaded ? "opacity-100" : "opacity-0"
-          )}
+          className="w-full h-full object-cover object-center transition-transform duration-slow group-hover:scale-105"
         />
 
         {/* Top Badges (Always Visible) */}
