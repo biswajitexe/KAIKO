@@ -17,3 +17,4 @@ export * from "./search/search-page-view";
 export * from "./auth/login-form";
 export * from "./auth/signup-form";
 export * from "./profile/profile-page-view";
+export * from "./mal-anime-search";
