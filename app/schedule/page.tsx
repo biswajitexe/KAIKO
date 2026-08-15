@@ -90,7 +90,7 @@ export default function SchedulePage() {
           Weekly Anime Release Schedule
         </h1>
         <p className="text-14 text-text-secondary max-w-2xl">
-          Track upcoming episode broadcast times, simulcast premiere countdowns, and air dates across the week powered by MyAnimeList.
+          Track upcoming episode broadcast times, simulcast premiere countdowns, and air dates across the week with official simulcast timetables.
         </p>
       </div>
 
@@ -142,7 +142,7 @@ export default function SchedulePage() {
         {loading ? (
           <div className="p-12 text-center text-text-muted flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-            <span>Loading live broadcast schedule from MyAnimeList...</span>
+            <span>Loading live broadcast schedule...</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

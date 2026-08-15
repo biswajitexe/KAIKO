@@ -503,22 +503,23 @@ export const ALL_CATALOG_ITEMS: CatalogItem[] = [
   })),
 ];
 
-// Mock User Profile & In-Progress Library Data
+// User Profile & Creator Information
 export const MOCK_USER_PROFILE = {
-  username: "Vishwajeet",
-  handle: "@vishwajeet_k",
-  avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=240&auto=format&fit=crop",
-  bio: "Anime enthusiast • Webtoon & Manhwa binger • Collecting seasonal gems and legendary classics.",
-  joinDate: "Member since January 2024",
+  username: "zerox.exe",
+  handle: "@biswajitexe",
+  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=240&auto=format&fit=crop",
+  bio: "Creator & Lead Software Architect of KAIYO Platform. Building high-performance streaming architectures, manga/manhwa readers, and modern media experiences.",
+  joinDate: "Founder & Lead Developer • 2026",
+  github: "https://github.com/biswajitexe",
   stats: {
-    animeWatching: 6,
-    animeCompleted: 142,
-    animePlanToWatch: 38,
-    totalEpisodesWatched: 1840,
-    mangaReading: 9,
-    mangaCompleted: 58,
-    mangaPlanToRead: 24,
-    totalChaptersRead: 3120,
+    animeWatching: 12,
+    animeCompleted: 248,
+    animePlanToWatch: 65,
+    totalEpisodesWatched: 3420,
+    mangaReading: 18,
+    mangaCompleted: 112,
+    mangaPlanToRead: 45,
+    totalChaptersRead: 6850,
   },
 };
 

@@ -92,7 +92,7 @@ export function InfiniteMangaCatalog({ initialItems }: InfiniteMangaCatalogProps
       {/* Counter Header */}
       <div className="flex items-center justify-between">
         <span className="text-14 text-text-muted font-medium">
-          Showing <strong className="text-text-primary">{items.length}</strong> Titles from Global MyAnimeList Catalog
+          Showing <strong className="text-text-primary">{items.length}</strong> Titles from KAIYO Archive
         </span>
       </div>
 
@@ -120,7 +120,7 @@ export function InfiniteMangaCatalog({ initialItems }: InfiniteMangaCatalogProps
             {loading ? (
               <>
                 <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span>Loading more titles from MyAnimeList...</span>
+                <span>Loading more titles...</span>
               </>
             ) : (
               <>

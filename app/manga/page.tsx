@@ -26,7 +26,7 @@ export default async function MangaCatalogPage() {
           Explore Manga & Manhwa
         </h1>
         <p className="text-14 text-text-secondary max-w-2xl">
-          Dive into continuous long-strip manhwa, classic weekly manga chapters, and webtoons with live official MyAnimeList catalog updates.
+          Dive into continuous long-strip manhwa, classic weekly manga chapters, and webtoons with high-definition official releases.
         </p>
       </div>
 

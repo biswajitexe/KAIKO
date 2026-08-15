@@ -48,14 +48,14 @@ export function MALAnimeSearch() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="px-2 py-0.5 rounded-sm bg-accent/20 border border-accent/40 text-accent font-mono text-[10px] uppercase font-bold">
-            LIVE MAL API v2
+            LIVE SEARCH EXPLORER
           </span>
           <h3 className="text-18 font-bold text-text-primary">
-            MyAnimeList Search Explorer
+            Instant Anime Title Search
           </h3>
         </div>
         <p className="text-12 text-text-muted">
-          Type any anime title to fetch real-time data from MyAnimeList
+          Type any anime or manga title to search across 25,000+ indexed releases
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export function MALAnimeSearch() {
         <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
         <input
           type="text"
-          placeholder="Search on MyAnimeList (e.g. Frieren, Naruto, Bleach)..."
+          placeholder="Search by title (e.g. Frieren, Naruto, Bleach, Solo Leveling)..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 rounded-sm bg-surface-elevated border border-border text-14 text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none transition-colors"
@@ -75,15 +75,13 @@ export function MALAnimeSearch() {
       {loading && (
         <div className="flex items-center gap-2 text-12 text-accent font-medium animate-pulse">
           <span className="w-3.5 h-3.5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          <span>Querying MyAnimeList API...</span>
+          <span>Searching streaming catalog...</span>
         </div>
       )}
 
       {errorMessage && (
         <div className="p-3 rounded-sm bg-status-error/10 border border-status-error/30 text-status-error text-12">
-          {errorMessage.includes("MAL_CLIENT_ID is missing")
-            ? "⚠️ Please add your MAL_CLIENT_ID to .env.local to enable live MyAnimeList fetching."
-            : errorMessage}
+          {errorMessage}
         </div>
       )}
 

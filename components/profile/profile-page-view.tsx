@@ -60,13 +60,14 @@ export function ProfilePageView() {
           </div>
 
           {/* Details */}
-          <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2.5">
-              <h1 className="text-20 sm:text-24 font-bold text-text-primary">
+              <h1 className="text-20 sm:text-24 font-extrabold text-text-primary flex items-center gap-1.5">
                 {MOCK_USER_PROFILE.username}
+                <span className="w-4 h-4 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold" title="Verified Creator">✓</span>
               </h1>
-              <span className="px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-accent font-semibold text-[11px] uppercase tracking-wider">
-                PRO Member
+              <span className="px-2.5 py-0.5 rounded-sm bg-accent/20 border border-accent/40 text-accent font-bold text-[10px] uppercase tracking-wider font-mono">
+                FOUNDER & LEAD DEVELOPER
               </span>
             </div>
             <p className="text-12 font-mono text-text-muted">
@@ -78,13 +79,18 @@ export function ProfilePageView() {
           </div>
         </div>
 
-        {/* Action Button */}
-        <button
-          type="button"
-          className="px-4 py-2 rounded-md bg-surface-elevated border border-border text-14 font-medium text-text-primary hover:border-border-strong hover:bg-surface-active transition-colors duration-fast flex-shrink-0 focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          Edit Profile
-        </button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <a
+            href="https://github.com/biswajitexe"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 rounded-md bg-surface-elevated border border-border text-14 font-medium text-text-primary hover:border-accent hover:text-accent transition-colors duration-fast flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <span>GitHub Profile</span>
+            <span className="text-accent">↗</span>
+          </a>
+        </div>
       </div>
 
       {/* =========================================================================

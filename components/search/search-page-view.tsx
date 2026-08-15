@@ -258,7 +258,7 @@ export function SearchPageView() {
             {loading && (
               <div className="flex items-center gap-2 text-12 text-accent">
                 <span className="w-3.5 h-3.5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span>Loading live MAL data...</span>
+                <span>Searching streaming archive...</span>
               </div>
             )}
           </div>
