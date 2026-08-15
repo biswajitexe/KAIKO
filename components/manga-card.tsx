@@ -70,8 +70,6 @@ export function MangaCard({
   className,
   variant = "poster",
 }: MangaCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
   if (isLoading || !item) {
     return <MangaCardSkeleton variant={variant} className={className} />;
   }
@@ -88,9 +86,6 @@ export function MangaCard({
         aria-label={`${item.title}, ${item.latestChapter}, updated ${item.timeAgo}`}
       >
         <div className="relative aspect-[3/4] w-20 flex-shrink-0 rounded-sm overflow-hidden bg-surface-elevated">
-          {!imageLoaded && (
-            <div className="absolute inset-0 bg-surface-elevated animate-pulse" />
-          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.coverImage}
@@ -140,11 +135,6 @@ export function MangaCard({
     >
       {/* 2:3 Aspect Ratio Poster Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-surface-elevated">
-        {/* Placeholder before load */}
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-surface-elevated animate-pulse" />
-        )}
-
         {/* Lazy-loaded Image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

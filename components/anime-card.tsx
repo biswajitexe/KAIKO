@@ -37,8 +37,6 @@ export function AnimeCardSkeleton({ className }: { className?: string }) {
 }
 
 export function AnimeCard({ item, isLoading, className }: AnimeCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
   if (isLoading || !item) {
     return <AnimeCardSkeleton className={className} />;
   }
@@ -59,11 +57,6 @@ export function AnimeCard({ item, isLoading, className }: AnimeCardProps) {
     >
       {/* 2:3 Aspect Ratio Poster Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-surface-elevated">
-        {/* Placeholder / Shimmer before image loads */}
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-surface-elevated animate-pulse" />
-        )}
-
         {/* Lazy-loaded Image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

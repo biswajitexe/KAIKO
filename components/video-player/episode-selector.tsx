@@ -82,21 +82,17 @@ export function EpisodeSelector({
                 )}
                 aria-current={isCurrent ? "true" : undefined}
               >
-                {/* Thumbnail */}
-                <div className="relative aspect-video w-20 flex-shrink-0 rounded-sm overflow-hidden bg-surface-elevated">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ep.thumbnail}
-                    alt={ep.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                  />
+                {/* Thumbnail / Episode Number Badge */}
+                <div className="relative aspect-video w-20 flex-shrink-0 rounded-sm overflow-hidden bg-gradient-to-br from-surface-elevated to-surface border border-border/60 flex items-center justify-center">
+                  <span className="text-11 font-mono font-bold text-text-primary tracking-wider">
+                    EP {ep.number}
+                  </span>
                   {isCurrent ? (
-                    <div className="absolute inset-0 bg-accent/30 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-accent/25 flex items-center justify-center">
                       <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
                     </div>
                   ) : (
-                    <div className="absolute inset-0 bg-bg/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <div className="absolute inset-0 bg-bg/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <PlayIcon className="w-3.5 h-3.5 text-white fill-current" />
                     </div>
                   )}

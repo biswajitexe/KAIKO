@@ -65,19 +65,29 @@ export function MediaDetailView({ type, media }: MediaDetailViewProps) {
           HERO BANNER & HEADER
           ========================================================================= */}
       <div className="relative -mx-4 md:-mx-8 -mt-6 rounded-b-lg overflow-hidden bg-surface-elevated border-b border-border">
-        {/* Banner image with multi-layered vignette */}
-        <div className="relative aspect-[21/9] sm:aspect-[24/9] max-h-[460px] w-full overflow-hidden">
+        {/* Banner image with ambient glow & multi-layered vignette */}
+        <div className="relative aspect-[21/9] sm:aspect-[24/9] max-h-[460px] w-full overflow-hidden bg-bg">
+          {/* Ambient Blurred Glow */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={media.bannerImage || media.coverImage}
+            alt=""
+            aria-hidden="true"
+            referrerPolicy="no-referrer"
+            className="absolute inset-0 w-full h-full object-cover filter blur-3xl scale-125 opacity-35 pointer-events-none"
+          />
+          {/* Main Backdrop */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={media.bannerImage || media.coverImage}
             alt={media.title}
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center opacity-85"
           />
           {/* Deep dark gradient overlays */}
           <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-bg/95 via-bg/60 to-transparent w-full lg:w-3/4" />
-          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-bg/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-bg/95 via-bg/70 to-transparent w-full lg:w-3/4" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-bg/70 to-transparent" />
         </div>
 
         {/* Content Container positioned over banner */}

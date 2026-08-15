@@ -38,6 +38,16 @@ function extractMalIdFromSlug(slug: string): number | null {
   return null;
 }
 
+export function cleanSynopsis(raw?: string): string {
+  if (!raw) return "Watch and stream high-definition anime releases with official multi-language subtitles.";
+  return raw
+    .replace(/\[Written by MAL Rewrite\]/gi, "")
+    .replace(/\(Source:[^)]*\)/gi, "")
+    .replace(/\[Written by[^\]]*\]/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+
 /**
  * Loads real Trending Anime from MAL API (falls back to local data if offline)
  */
@@ -45,7 +55,13 @@ export async function getTrendingAnime(limit = 12): Promise<AnimeItem[]> {
   try {
     const res = await fetchTopAnime("all", limit);
     if (res.data && res.data.length > 0) {
-      return res.data.map((item) => malNodeToAnimeItem(item.node));
+      return res.data.map((item) => {
+        const mapped = malNodeToAnimeItem(item.node);
+        return {
+          ...mapped,
+          synopsis: cleanSynopsis(mapped.synopsis),
+        };
+      });
     }
   } catch (err) {
     console.warn("[DataLoader] Failed to fetch top anime from MAL, using fallback:", err);
@@ -60,7 +76,13 @@ export async function getAiringAnime(limit = 12): Promise<AnimeItem[]> {
   try {
     const res = await fetchTopAnime("airing", limit);
     if (res.data && res.data.length > 0) {
-      return res.data.map((item) => malNodeToAnimeItem(item.node));
+      return res.data.map((item) => {
+        const mapped = malNodeToAnimeItem(item.node);
+        return {
+          ...mapped,
+          synopsis: cleanSynopsis(mapped.synopsis),
+        };
+      });
     }
   } catch (err) {
     console.warn("[DataLoader] Failed to fetch airing anime from MAL, using fallback:", err);
@@ -75,7 +97,13 @@ export async function getUpcomingAnime(limit = 12): Promise<AnimeItem[]> {
   try {
     const res = await fetchTopAnime("upcoming", limit);
     if (res.data && res.data.length > 0) {
-      return res.data.map((item) => malNodeToAnimeItem(item.node));
+      return res.data.map((item) => {
+        const mapped = malNodeToAnimeItem(item.node);
+        return {
+          ...mapped,
+          synopsis: cleanSynopsis(mapped.synopsis),
+        };
+      });
     }
   } catch (err) {
     console.warn("[DataLoader] Failed to fetch upcoming anime from MAL, using fallback:", err);
@@ -90,7 +118,13 @@ export async function getLatestManga(limit = 12): Promise<MangaUpdateItem[]> {
   try {
     const res = await fetchTopManga("manga", limit);
     if (res.data && res.data.length > 0) {
-      return res.data.map((item) => malNodeToMangaItem(item.node, "MANGA"));
+      return res.data.map((item) => {
+        const mapped = malNodeToMangaItem(item.node, "MANGA");
+        return {
+          ...mapped,
+          synopsis: cleanSynopsis(mapped.synopsis),
+        };
+      });
     }
   } catch (err) {
     console.warn("[DataLoader] Failed to fetch top manga from MAL, using fallback:", err);
@@ -105,7 +139,13 @@ export async function getTopManhwa(limit = 12): Promise<MangaUpdateItem[]> {
   try {
     const res = await fetchTopManga("manhwa", limit);
     if (res.data && res.data.length > 0) {
-      return res.data.map((item) => malNodeToMangaItem(item.node, "MANHWA"));
+      return res.data.map((item) => {
+        const mapped = malNodeToMangaItem(item.node, "MANHWA");
+        return {
+          ...mapped,
+          synopsis: cleanSynopsis(mapped.synopsis),
+        };
+      });
     }
   } catch (err) {
     console.warn("[DataLoader] Failed to fetch manhwa from MAL, using fallback:", err);
@@ -114,7 +154,20 @@ export async function getTopManhwa(limit = 12): Promise<MangaUpdateItem[]> {
 }
 
 /**
- * Loads Featured Hero Carousel items powered by real MAL data
+ * Curated 4K Wide Wallpapers for top anime titles to prevent blurry portrait stretch
+ */
+const HIGH_RES_WALLPAPERS: Record<string, string> = {
+  "frieren": "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1920&auto=format&fit=crop",
+  "one-piece": "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop",
+  "solo-leveling": "https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=1920&auto=format&fit=crop",
+  "jujutsu-kaisen": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1920&auto=format&fit=crop",
+  "bleach": "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1920&auto=format&fit=crop",
+  "attack-on-titan": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=1920&auto=format&fit=crop",
+  "demon-slayer": "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1920&auto=format&fit=crop",
+};
+
+/**
+ * Loads Featured Hero Carousel items with clean synopses and high-definition imagery
  */
 export async function getFeaturedHeroItems(): Promise<FeaturedItem[]> {
   try {
@@ -125,18 +178,26 @@ export async function getFeaturedHeroItems(): Promise<FeaturedItem[]> {
         const cover = node.main_picture?.large || node.main_picture?.medium || "";
         const slug = `${node.title.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-")}-${node.id}`;
 
+        // Find high-res wide wallpaper if matched, or fallback to cover
+        const key = Object.keys(HIGH_RES_WALLPAPERS).find((k) =>
+          node.title.toLowerCase().includes(k)
+        );
+        const bannerImage = (key ? HIGH_RES_WALLPAPERS[key] : null) || cover;
+
         return {
           id: `hero-mal-${node.id}`,
           slug,
           title: node.title,
           type: "anime",
-          bannerImage: cover,
+          bannerImage,
           coverImage: cover,
-          synopsis: node.synopsis || "Watch the latest episodes in ultra-high definition.",
-          genres: node.genres && node.genres.length > 0 ? node.genres.map((g) => g.name) : ["Action", "Adventure"],
+          synopsis: cleanSynopsis(node.synopsis),
+          genres: node.genres && node.genres.length > 0 ? node.genres.map((g) => g.name) : ["Action", "Fantasy", "Adventure"],
           score: node.mean || 9.0,
           episodesOrChapters: `${node.num_episodes || 24} Episodes`,
-          seasonOrFormat: node.start_season ? `${node.start_season.season.toUpperCase()} ${node.start_season.year}` : "TV Series",
+          seasonOrFormat: node.start_season
+            ? `${node.start_season.season.toUpperCase()} ${node.start_season.year} • TV SERIES`
+            : "TV SERIES",
           year: node.start_season?.year || 2024,
           badge: index === 0 ? "#1 MOST POPULAR" : `#${index + 1} TRENDING`,
         };
@@ -237,6 +298,7 @@ export async function getRealAnimeDetail(slug: string): Promise<AnimeFullDetail>
         return {
           ...baseItem,
           slug: cleaned,
+          synopsis: cleanSynopsis(malDetail.synopsis),
           japaneseTitle: malDetail.alternative_titles?.ja || baseItem.title,
           episodesList,
           reviews,
@@ -279,6 +341,7 @@ export async function getRealMangaDetail(slug: string): Promise<MangaFullDetail>
         return {
           ...baseManga,
           slug: cleaned,
+          synopsis: cleanSynopsis(match.node.synopsis),
           chaptersList,
           reviews: generateReviews(baseManga.rating),
           related: LATEST_MANGA_UPDATES.slice(0, 5),
