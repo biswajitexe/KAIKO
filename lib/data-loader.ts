@@ -23,6 +23,14 @@ import {
   type ReviewItem,
 } from "@/lib/mock-data";
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function cleanSlug(slug: string): string {
   return slug.replace(/^anime\//, "").replace(/^manga\//, "");
 }
@@ -38,14 +46,18 @@ function extractMalIdFromSlug(slug: string): number | null {
   return null;
 }
 
-export function cleanSynopsis(raw?: string): string {
+export function cleanSynopsis(raw?: string, maxLen = 140): string {
   if (!raw) return "Watch and stream high-definition anime releases with official multi-language subtitles.";
-  return raw
+  const cleaned = raw
     .replace(/\[Written by MAL Rewrite\]/gi, "")
     .replace(/\(Source:[^)]*\)/gi, "")
     .replace(/\[Written by[^\]]*\]/gi, "")
     .replace(/<[^>]*>/g, "")
+    .replace(/\r?\n|\r/g, " ")
     .trim();
+
+  if (cleaned.length <= maxLen) return cleaned;
+  return cleaned.slice(0, maxLen).trim() + "...";
 }
 
 /**
@@ -175,19 +187,21 @@ export async function getFeaturedHeroItems(): Promise<FeaturedItem[]> {
     if (res.data && res.data.length >= 3) {
       return res.data.slice(0, 5).map((item, index) => {
         const node = item.node;
+        const preferredTitle = node.alternative_titles?.en?.trim() || node.title;
         const cover = node.main_picture?.large || node.main_picture?.medium || "";
-        const slug = `${node.title.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-")}-${node.id}`;
+        const slug = `${slugify(preferredTitle)}-${node.id}`;
 
         // Find high-res wide wallpaper if matched, or fallback to cover
         const key = Object.keys(HIGH_RES_WALLPAPERS).find((k) =>
-          node.title.toLowerCase().includes(k)
+          preferredTitle.toLowerCase().includes(k) || node.title.toLowerCase().includes(k)
         );
         const bannerImage = (key ? HIGH_RES_WALLPAPERS[key] : null) || cover;
 
         return {
           id: `hero-mal-${node.id}`,
           slug,
-          title: node.title,
+          title: preferredTitle,
+          japaneseTitle: node.alternative_titles?.ja || node.title,
           type: "anime",
           bannerImage,
           coverImage: cover,

@@ -28,6 +28,11 @@ export interface MALGenre {
 export interface MALAnimeNode {
   id: number;
   title: string;
+  alternative_titles?: {
+    synonyms?: string[];
+    en?: string;
+    ja?: string;
+  };
   main_picture?: MALPicture;
   mean?: number;
   num_episodes?: number;
@@ -237,8 +242,9 @@ function slugify(text: string): string {
  * Converts a MAL Anime Node to the platform's standard AnimeItem
  */
 export function malNodeToAnimeItem(node: MALAnimeNode): AnimeItem {
+  const preferredTitle = node.alternative_titles?.en?.trim() || node.title;
   const cover = node.main_picture?.large || node.main_picture?.medium || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop";
-  const slug = `${slugify(node.title)}-${node.id}`;
+  const slug = `${slugify(preferredTitle)}-${node.id}`;
   
   let status: "AIRING" | "FINISHED" | "UPCOMING" = "FINISHED";
   if (node.status === "currently_airing") status = "AIRING";
@@ -255,7 +261,8 @@ export function malNodeToAnimeItem(node: MALAnimeNode): AnimeItem {
   return {
     id: `mal-${node.id}`,
     slug,
-    title: node.title,
+    title: preferredTitle,
+    japaneseTitle: node.alternative_titles?.ja || node.title,
     coverImage: cover,
     bannerImage: cover,
     synopsis: node.synopsis || "No synopsis available.",
@@ -275,8 +282,9 @@ export function malNodeToAnimeItem(node: MALAnimeNode): AnimeItem {
  * Converts a MAL Manga Node to the platform's standard MangaUpdateItem
  */
 export function malNodeToMangaItem(node: MALAnimeNode, forceType?: "MANGA" | "MANHWA"): MangaUpdateItem {
+  const preferredTitle = node.alternative_titles?.en?.trim() || node.title;
   const cover = node.main_picture?.large || node.main_picture?.medium || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop";
-  const slug = `${slugify(node.title)}-${node.id}`;
+  const slug = `${slugify(preferredTitle)}-${node.id}`;
   
   let type: "MANGA" | "MANHWA" | "MANHUA" = forceType || "MANGA";
   if (!forceType && node.media_type === "manhwa") type = "MANHWA";
@@ -284,7 +292,7 @@ export function malNodeToMangaItem(node: MALAnimeNode, forceType?: "MANGA" | "MA
   return {
     id: `mal-manga-${node.id}`,
     slug,
-    title: node.title,
+    title: preferredTitle,
     coverImage: cover,
     bannerImage: cover,
     synopsis: node.synopsis || "No synopsis available.",

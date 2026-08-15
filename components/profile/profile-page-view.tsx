@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   AnimeCard,
@@ -9,9 +9,9 @@ import {
   BookOpenIcon,
   ClockIcon,
   StarIcon,
+  XIcon,
 } from "@/components";
 import {
-  MOCK_USER_PROFILE,
   CONTINUE_MEDIA_LIST,
   USER_LIBRARY_ANIME,
   USER_LIBRARY_MANGA,
@@ -23,9 +23,99 @@ import { cn } from "@/lib/utils";
 type ProfileTab = "watchlist" | "reading-list" | "favorites" | "activity";
 type StatusFilter = "all" | "watching-reading" | "completed" | "plan-to-watch";
 
+const PRESET_AVATARS = [
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=240&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=240&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=240&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=240&auto=format&fit=crop",
+];
+
+const DEFAULT_PROFILE = {
+  username: "ShadowMonarch",
+  handle: "@shadow_hunter",
+  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=240&auto=format&fit=crop",
+  bio: "Passionate anime & manga enthusiast. Binging seasonal simulcasts, webtoons, and classic series.",
+  joinDate: "Member since 2024",
+  stats: {
+    animeWatching: 8,
+    animeCompleted: 156,
+    animePlanToWatch: 42,
+    totalEpisodesWatched: 2480,
+    mangaReading: 14,
+    mangaCompleted: 78,
+    mangaPlanToRead: 30,
+    totalChaptersRead: 4920,
+  },
+};
+
 export function ProfilePageView() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("watchlist");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Edit form state
+  const [editUsername, setEditUsername] = useState(DEFAULT_PROFILE.username);
+  const [editHandle, setEditHandle] = useState(DEFAULT_PROFILE.handle);
+  const [editBio, setEditBio] = useState(DEFAULT_PROFILE.bio);
+  const [editAvatar, setEditAvatar] = useState(DEFAULT_PROFILE.avatar);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("kaiyo_user_profile");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setProfile((prev) => ({ ...prev, ...parsed }));
+        setEditUsername(parsed.username || prevUsername(parsed));
+        setEditHandle(parsed.handle || prevHandle(parsed));
+        setEditBio(parsed.bio || prevBio(parsed));
+        setEditAvatar(parsed.avatar || prevAvatar(parsed));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function prevUsername(p: any) { return p.username || DEFAULT_PROFILE.username; }
+  function prevHandle(p: any) { return p.handle || DEFAULT_PROFILE.handle; }
+  function prevBio(p: any) { return p.bio || DEFAULT_PROFILE.bio; }
+  function prevAvatar(p: any) { return p.avatar || DEFAULT_PROFILE.avatar; }
+
+  const handleOpenEditModal = () => {
+    setEditUsername(profile.username);
+    setEditHandle(profile.handle);
+    setEditBio(profile.bio);
+    setEditAvatar(profile.avatar);
+    setSaveSuccess(false);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = {
+      ...profile,
+      username: editUsername.trim() || profile.username,
+      handle: editHandle.startsWith("@") ? editHandle.trim() : `@${editHandle.trim()}`,
+      bio: editBio.trim() || profile.bio,
+      avatar: editAvatar.trim() || profile.avatar,
+    };
+
+    setProfile(updated);
+    try {
+      localStorage.setItem("kaiyo_user_profile", JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+
+    setSaveSuccess(true);
+    setTimeout(() => {
+      setIsEditModalOpen(false);
+      setSaveSuccess(false);
+    }, 600);
+  };
 
   const filteredAnime = USER_LIBRARY_ANIME.filter((entry) =>
     statusFilter === "all" ? true : entry.userStatus === statusFilter
@@ -40,19 +130,18 @@ export function ProfilePageView() {
       {/* =========================================================================
           PROFILE HEADER CARD
           ========================================================================= */}
-      <div className="p-6 sm:p-8 rounded-lg bg-surface border border-border flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="p-6 sm:p-8 rounded-lg bg-surface border border-border flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
         {/* User Identity & Avatar */}
         <div className="flex items-start sm:items-center gap-4 sm:gap-6">
           {/* Avatar */}
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-border bg-surface-elevated flex-shrink-0">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-accent bg-surface-elevated flex-shrink-0 shadow-md">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={MOCK_USER_PROFILE.avatar}
-              alt={MOCK_USER_PROFILE.username}
+              src={profile.avatar}
+              alt={profile.username}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
             />
-            {/* Online Indicator */}
             <span
               className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-status-success border-2 border-surface"
               aria-label="Online"
@@ -60,37 +149,32 @@ export function ProfilePageView() {
           </div>
 
           {/* Details */}
-            <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2.5">
-              <h1 className="text-20 sm:text-24 font-extrabold text-text-primary flex items-center gap-1.5">
-                {MOCK_USER_PROFILE.username}
-                <span className="w-4 h-4 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold" title="Verified Creator">✓</span>
+              <h1 className="text-20 sm:text-24 font-extrabold text-text-primary">
+                {profile.username}
               </h1>
-              <span className="px-2.5 py-0.5 rounded-sm bg-accent/20 border border-accent/40 text-accent font-bold text-[10px] uppercase tracking-wider font-mono">
-                FOUNDER & LEAD DEVELOPER
+              <span className="px-2.5 py-0.5 rounded-sm bg-accent/15 border border-accent/30 text-accent font-semibold text-[11px] uppercase tracking-wider">
+                VIP MEMBER
               </span>
             </div>
             <p className="text-12 font-mono text-text-muted">
-              {MOCK_USER_PROFILE.handle} • {MOCK_USER_PROFILE.joinDate}
+              {profile.handle} • {profile.joinDate}
             </p>
             <p className="text-14 text-text-secondary max-w-xl mt-1 leading-relaxed">
-              {MOCK_USER_PROFILE.bio}
+              {profile.bio}
             </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          <a
-            href="https://github.com/biswajitexe"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 rounded-md bg-surface-elevated border border-border text-14 font-medium text-text-primary hover:border-accent hover:text-accent transition-colors duration-fast flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <span>GitHub Profile</span>
-            <span className="text-accent">↗</span>
-          </a>
-        </div>
+        {/* Action Button */}
+        <button
+          type="button"
+          onClick={handleOpenEditModal}
+          className="px-5 py-2.5 rounded-md bg-accent text-white hover:bg-accent-hover font-semibold text-14 transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-accent shadow-md shadow-accent/20 cursor-pointer"
+        >
+          Edit Profile
+        </button>
       </div>
 
       {/* =========================================================================
@@ -104,10 +188,10 @@ export function ProfilePageView() {
           </span>
           <div className="flex items-baseline gap-2">
             <span className="text-24 font-bold text-text-primary">
-              {MOCK_USER_PROFILE.stats.animeWatching}
+              {profile.stats.animeWatching}
             </span>
             <span className="text-12 text-text-muted">
-              / {MOCK_USER_PROFILE.stats.animeCompleted} completed
+              / {profile.stats.animeCompleted} completed
             </span>
           </div>
         </div>
@@ -118,211 +202,170 @@ export function ProfilePageView() {
             Reading Manga
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-24 font-bold text-accent">
-              {MOCK_USER_PROFILE.stats.mangaReading}
+            <span className="text-24 font-bold text-text-primary">
+              {profile.stats.mangaReading}
             </span>
             <span className="text-12 text-text-muted">
-              / {MOCK_USER_PROFILE.stats.mangaCompleted} completed
+              / {profile.stats.mangaCompleted} completed
             </span>
           </div>
         </div>
 
-        {/* Plan to Watch / Read */}
+        {/* Planned */}
         <div className="p-4 rounded-md bg-surface border border-border flex flex-col gap-1">
           <span className="text-12 text-text-muted font-medium uppercase tracking-wider">
             Plan to Watch/Read
           </span>
-          <span className="text-24 font-bold text-text-primary">
-            {MOCK_USER_PROFILE.stats.animePlanToWatch +
-              MOCK_USER_PROFILE.stats.mangaPlanToRead}
-          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-24 font-bold text-text-primary">
+              {profile.stats.animePlanToWatch + profile.stats.mangaPlanToRead}
+            </span>
+            <span className="text-12 text-text-muted">titles queued</span>
+          </div>
         </div>
 
-        {/* Total Consumed */}
+        {/* Total Time / Episodes */}
         <div className="p-4 rounded-md bg-surface border border-border flex flex-col gap-1">
           <span className="text-12 text-text-muted font-medium uppercase tracking-wider">
-            Total Logged
+            Total Consumed
           </span>
           <div className="flex items-baseline gap-2">
             <span className="text-24 font-bold text-text-primary">
-              {MOCK_USER_PROFILE.stats.totalEpisodesWatched}
+              {profile.stats.totalEpisodesWatched}
             </span>
-            <span className="text-12 text-text-muted">eps • {MOCK_USER_PROFILE.stats.totalChaptersRead} chs</span>
+            <span className="text-12 text-text-muted">eps • {profile.stats.totalChaptersRead} chs</span>
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          CONTINUE WATCHING & READING ROW WITH PROGRESS BARS
+          CONTINUE WATCHING & READING ROW
           ========================================================================= */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <div>
-            <h2 className="text-18 font-bold text-text-primary">
-              Continue Watching & Reading
-            </h2>
-            <p className="text-12 text-text-muted">
-              Pick up right where you left off
-            </p>
-          </div>
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-18 font-bold text-text-primary">
+            Jump Back In (Continue)
+          </h2>
+          <Link
+            href="/watchlist"
+            className="text-12 text-text-secondary hover:text-accent font-medium transition-colors"
+          >
+            Full Watchlist →
+          </Link>
         </div>
 
-        {/* Horizontal In-Progress Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CONTINUE_MEDIA_LIST.map((item) => (
-            <Link
+            <div
               key={item.id}
-              href={item.resumeHref}
-              className="group flex flex-col rounded-md overflow-hidden bg-surface border border-border hover:border-accent hover:-translate-y-0.5 transition-all duration-fast p-3 gap-3"
+              className="p-3 rounded-md bg-surface border border-border flex gap-3 items-center group hover:border-accent transition-colors"
             >
-              <div className="flex gap-3">
-                {/* 2:3 Miniature Poster */}
-                <div className="relative aspect-[2/3] w-14 flex-shrink-0 rounded-sm overflow-hidden bg-surface-elevated">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.coverImage}
-                    alt={item.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                  <div className="absolute inset-0 bg-bg/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <PlayIcon className="w-4 h-4 text-white fill-current" />
-                  </div>
-                </div>
-
-                {/* Title & Meta */}
-                <div className="flex flex-col justify-between flex-1 min-w-0">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-accent">
-                      {item.mediaType === "anime" ? "Anime" : "Manga"}
-                    </span>
-                    <h3 className="text-14 font-semibold text-text-primary line-clamp-1 group-hover:text-accent transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="text-12 text-text-muted mt-0.5">
-                      {item.mediaType === "anime"
-                        ? `EP ${item.currentNumber} of ${item.totalCount}`
-                        : `Ch ${item.currentNumber} of ${item.totalCount}`}
-                    </p>
-                  </div>
-
-                  <span className="text-[11px] text-text-muted">
-                    {item.lastAccessed}
-                  </span>
-                </div>
+              <div className="relative aspect-[2/3] w-14 rounded-sm overflow-hidden bg-surface-elevated flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.coverImage}
+                  alt={item.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
               </div>
 
-              {/* Progress Bar */}
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between text-[11px] font-mono text-text-muted">
-                  <span>Progress</span>
-                  <span className="text-text-primary font-semibold">
-                    {item.progressPercentage}%
+              <div className="flex flex-col justify-between flex-1 min-w-0 h-full py-0.5">
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase text-accent">
+                    {item.mediaType === "anime" ? "EPISODE" : "CHAPTER"} {item.currentNumber}
                   </span>
+                  <h3 className="text-14 font-bold text-text-primary truncate">
+                    {item.title}
+                  </h3>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-surface-elevated overflow-hidden">
-                  <div
-                    className="h-full bg-accent transition-all duration-normal"
-                    style={{ width: `${item.progressPercentage}%` }}
-                  />
+
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="w-full h-1 bg-surface-elevated rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent rounded-full"
+                      style={{ width: `${item.progressPercentage}%` }}
+                    />
+                  </div>
+                  <Link
+                    href={item.resumeHref}
+                    className="text-11 text-text-muted hover:text-text-primary flex items-center gap-1 font-medium transition-colors"
+                  >
+                    <PlayIcon className="w-3 h-3 text-accent fill-current" />
+                    <span>Resume ({item.lastAccessed})</span>
+                  </Link>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </section>
 
       {/* =========================================================================
-          TABBED WATCHLIST & READING LIST GRIDS
+          LIBRARY TABS & FILTER BAR
           ========================================================================= */}
       <section className="flex flex-col gap-6">
-        {/* Main Tabs Header */}
-        <div className="flex items-center gap-2 border-b border-border">
-          <button
-            type="button"
-            onClick={() => setActiveTab("watchlist")}
-            className={cn(
-              "px-4 py-3 text-14 font-semibold border-b-2 -mb-[2px] transition-colors focus-visible:ring-2 focus-visible:ring-accent",
-              activeTab === "watchlist"
-                ? "border-accent text-text-primary"
-                : "border-transparent text-text-secondary hover:text-text-primary"
-            )}
-          >
-            Watchlist ({USER_LIBRARY_ANIME.length})
-          </button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-3">
+          {/* Tabs */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("watchlist")}
+              className={cn(
+                "px-4 py-2 rounded-sm font-semibold text-14 transition-colors",
+                activeTab === "watchlist"
+                  ? "bg-accent text-white"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
+              )}
+            >
+              Anime Library ({filteredAnime.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("reading-list")}
+              className={cn(
+                "px-4 py-2 rounded-sm font-semibold text-14 transition-colors",
+                activeTab === "reading-list"
+                  ? "bg-accent text-white"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
+              )}
+            >
+              Manga Library ({filteredManga.length})
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("reading-list")}
-            className={cn(
-              "px-4 py-3 text-14 font-semibold border-b-2 -mb-[2px] transition-colors focus-visible:ring-2 focus-visible:ring-accent",
-              activeTab === "reading-list"
-                ? "border-accent text-text-primary"
-                : "border-transparent text-text-secondary hover:text-text-primary"
+          {/* Status Filter */}
+          <div className="flex items-center gap-1.5 text-12 overflow-x-auto">
+            <span className="text-text-muted whitespace-nowrap mr-1">Status:</span>
+            {(["all", "watching-reading", "completed", "plan-to-watch"] as StatusFilter[]).map(
+              (filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setStatusFilter(filter)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-sm border font-medium whitespace-nowrap transition-colors",
+                    statusFilter === filter
+                      ? "bg-surface-elevated border-accent text-accent font-semibold"
+                      : "bg-surface border-border text-text-muted hover:text-text-primary hover:border-border-strong"
+                  )}
+                >
+                  {filter === "all"
+                    ? "All"
+                    : filter === "watching-reading"
+                    ? "In Progress"
+                    : filter === "completed"
+                    ? "Completed"
+                    : "Plan to Watch/Read"}
+                </button>
+              )
             )}
-          >
-            Reading List ({USER_LIBRARY_MANGA.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("favorites")}
-            className={cn(
-              "px-4 py-3 text-14 font-semibold border-b-2 -mb-[2px] transition-colors focus-visible:ring-2 focus-visible:ring-accent",
-              activeTab === "favorites"
-                ? "border-accent text-text-primary"
-                : "border-transparent text-text-secondary hover:text-text-primary"
-            )}
-          >
-            Favorites
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("activity")}
-            className={cn(
-              "px-4 py-3 text-14 font-semibold border-b-2 -mb-[2px] transition-colors focus-visible:ring-2 focus-visible:ring-accent",
-              activeTab === "activity"
-                ? "border-accent text-text-primary"
-                : "border-transparent text-text-secondary hover:text-text-primary"
-            )}
-          >
-            Activity History
-          </button>
+          </div>
         </div>
 
-        {/* Sub-status Filter Pills (For Watchlist and Reading List) */}
-        {(activeTab === "watchlist" || activeTab === "reading-list") && (
-          <div className="flex items-center gap-1.5 text-12">
-            {[
-              { id: "all", label: "All Titles" },
-              {
-                id: "watching-reading",
-                label: activeTab === "watchlist" ? "Watching" : "Reading",
-              },
-              { id: "completed", label: "Completed" },
-              { id: "plan-to-watch", label: "Plan to Watch/Read" },
-            ].map((st) => (
-              <button
-                key={st.id}
-                type="button"
-                onClick={() => setStatusFilter(st.id as StatusFilter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-sm border font-medium transition-colors",
-                  statusFilter === st.id
-                    ? "bg-accent border-accent text-white font-semibold"
-                    : "bg-surface border-border text-text-secondary hover:text-text-primary"
-                )}
-              >
-                {st.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Tab 1: Watchlist Grid */}
-        {activeTab === "watchlist" && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
+        {/* Library Content Grid */}
+        {activeTab === "watchlist" ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredAnime.map((entry) => (
               <AnimeCard
                 key={entry.id}
@@ -331,11 +374,8 @@ export function ProfilePageView() {
               />
             ))}
           </div>
-        )}
-
-        {/* Tab 2: Reading List Grid */}
-        {activeTab === "reading-list" && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredManga.map((entry) => (
               <MangaCard
                 key={entry.id}
@@ -346,87 +386,149 @@ export function ProfilePageView() {
             ))}
           </div>
         )}
+      </section>
 
-        {/* Tab 3: Favorites Grid */}
-        {activeTab === "favorites" && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
-            {USER_LIBRARY_ANIME.slice(0, 4).map((entry) => (
-              <AnimeCard
-                key={entry.id}
-                item={entry.item as AnimeItem}
-                className="w-full"
-              />
-            ))}
-            {USER_LIBRARY_MANGA.slice(0, 2).map((entry) => (
-              <MangaCard
-                key={entry.id}
-                item={entry.item as MangaUpdateItem}
-                variant="poster"
-                className="w-full"
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Tab 4: Activity History Timeline */}
-        {activeTab === "activity" && (
-          <div className="flex flex-col gap-3 max-w-2xl">
-            {[
-              {
-                id: "act-1",
-                action: "Watched Episode 8 of",
-                title: "Solo Leveling: Season 2",
-                time: "2 hours ago",
-                type: "anime",
-              },
-              {
-                id: "act-2",
-                action: "Read Chapter 238 of",
-                title: "Omniscient Reader's Viewpoint",
-                time: "Yesterday",
-                type: "manga",
-              },
-              {
-                id: "act-3",
-                action: "Completed series",
-                title: "Frieren: Beyond Journey's End (28/28 Episodes)",
-                time: "3 days ago",
-                type: "anime",
-              },
-              {
-                id: "act-4",
-                action: "Rated 10/10 for",
-                title: "Demon Slayer: Infinity Castle Arc",
-                time: "5 days ago",
-                type: "anime",
-              },
-            ].map((act) => (
-              <div
-                key={act.id}
-                className="p-3.5 rounded-md bg-surface border border-border flex items-center justify-between gap-3 text-14"
+      {/* =========================================================================
+          EDIT PROFILE MODAL DIALOG
+          ========================================================================= */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg/80 backdrop-blur-md animate-fade-in">
+          <div
+            className="w-full max-w-lg rounded-lg bg-surface border border-border shadow-2xl overflow-hidden flex flex-col"
+            role="dialog"
+            aria-labelledby="edit-profile-title"
+          >
+            {/* Modal Header */}
+            <div className="p-4 border-b border-border flex items-center justify-between bg-surface-elevated">
+              <h3 id="edit-profile-title" className="text-16 font-bold text-text-primary">
+                Edit User Profile
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                aria-label="Close edit profile dialog"
+                className="p-1 rounded-sm text-text-muted hover:text-text-primary hover:bg-surface transition-colors"
               >
+                <XIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveProfile} className="p-5 flex flex-col gap-4">
+              {/* Avatar Picker */}
+              <div className="flex flex-col gap-2">
+                <label className="text-12 font-medium text-text-primary">
+                  Profile Avatar
+                </label>
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-sm bg-surface-elevated border border-border flex items-center justify-center text-accent">
-                    {act.type === "anime" ? (
-                      <PlayIcon className="w-3.5 h-3.5 fill-current" />
-                    ) : (
-                      <BookOpenIcon className="w-3.5 h-3.5" />
-                    )}
+                  <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-accent flex-shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={editAvatar}
+                      alt="Avatar Preview"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <div>
-                    <span className="text-text-muted">{act.action} </span>
-                    <strong className="text-text-primary">{act.title}</strong>
+                  <div className="flex items-center gap-2">
+                    {PRESET_AVATARS.map((url, idx) => (
+                      <button
+                        key={url}
+                        type="button"
+                        onClick={() => setEditAvatar(url)}
+                        className={cn(
+                          "w-10 h-10 rounded-full overflow-hidden border-2 transition-all cursor-pointer",
+                          editAvatar === url ? "border-accent scale-110" : "border-border hover:border-text-muted"
+                        )}
+                        aria-label={`Select avatar ${idx + 1}`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt=""
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
                   </div>
-                </div>
-                <div className="flex items-center gap-1 text-12 text-text-muted flex-shrink-0">
-                  <ClockIcon className="w-3 h-3" />
-                  <span>{act.time}</span>
                 </div>
               </div>
-            ))}
+
+              {/* Username Input */}
+              <div className="flex flex-col gap-1">
+                <label htmlFor="edit-username" className="text-12 font-medium text-text-primary">
+                  Display Name
+                </label>
+                <input
+                  id="edit-username"
+                  type="text"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  placeholder="Your username"
+                  className="w-full px-3.5 py-2 rounded-sm bg-surface-elevated border border-border text-14 text-text-primary focus:border-accent focus:outline-none"
+                  required
+                />
+              </div>
+
+              {/* Handle Input */}
+              <div className="flex flex-col gap-1">
+                <label htmlFor="edit-handle" className="text-12 font-medium text-text-primary">
+                  User Handle
+                </label>
+                <input
+                  id="edit-handle"
+                  type="text"
+                  value={editHandle}
+                  onChange={(e) => setEditHandle(e.target.value)}
+                  placeholder="@handle"
+                  className="w-full px-3.5 py-2 rounded-sm bg-surface-elevated border border-border text-14 text-text-primary focus:border-accent focus:outline-none"
+                  required
+                />
+              </div>
+
+              {/* Bio Input */}
+              <div className="flex flex-col gap-1">
+                <label htmlFor="edit-bio" className="text-12 font-medium text-text-primary">
+                  Profile Bio
+                </label>
+                <textarea
+                  id="edit-bio"
+                  rows={3}
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Tell others what you love to watch & read..."
+                  className="w-full px-3.5 py-2 rounded-sm bg-surface-elevated border border-border text-14 text-text-primary focus:border-accent focus:outline-none resize-none"
+                />
+              </div>
+
+              {/* Save Success Banner */}
+              {saveSuccess && (
+                <div className="p-2.5 rounded-sm bg-status-success/15 border border-status-success/40 text-status-success text-12 font-medium text-center">
+                  ✓ Profile updated and saved successfully!
+                </div>
+              )}
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 rounded-sm text-14 text-text-muted hover:text-text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-sm bg-accent text-white font-semibold text-14 hover:bg-accent-hover transition-colors shadow-md shadow-accent/20"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </section>
+        </div>
+      )}
     </div>
   );
 }

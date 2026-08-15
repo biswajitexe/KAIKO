@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "KAIYO — Anime & Manga Platform",
-  description: "Next-generation anime and manga catalog and reader platform built by zerox.exe",
+  description: "Next-generation anime streaming archive, manga catalog, and Korean manhwa reader with ultra-high quality visuals.",
 };
 
 export const viewport: Viewport = {

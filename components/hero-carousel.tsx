@@ -150,8 +150,8 @@ export function HeroCarousel({
             )}
           </div>
 
-          {/* Synopsis */}
-          <p className="text-14 text-text-secondary line-clamp-2 max-w-xl hidden sm:block leading-relaxed drop-shadow-sm">
+          {/* Short Crisp Synopsis */}
+          <p className="text-13 sm:text-14 text-text-secondary line-clamp-2 max-w-lg hidden sm:block leading-relaxed drop-shadow-sm">
             {currentItem.synopsis}
           </p>
 
