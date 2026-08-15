@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAnimeDetails } from "@/lib/mock-data";
+import { getRealAnimeDetail } from "@/lib/data-loader";
 import { VideoPlayerChrome } from "@/components/video-player/video-player-chrome";
 import { EpisodeSelector } from "@/components/video-player/episode-selector";
 import {
@@ -21,7 +21,7 @@ export async function generateMetadata({
 }: WatchPageProps): Promise<Metadata> {
   const { slug } = await params;
   const { ep } = await searchParams;
-  const anime = getAnimeDetails(slug);
+  const anime = await getRealAnimeDetail(slug);
   const epNum = ep ? parseInt(ep, 10) : 1;
 
   return {
@@ -36,12 +36,19 @@ export default async function WatchAnimePage({
 }: WatchPageProps) {
   const { slug } = await params;
   const { ep } = await searchParams;
-  const anime = getAnimeDetails(slug);
+  const anime = await getRealAnimeDetail(slug);
 
   const epNumber = ep ? Math.max(1, parseInt(ep, 10) || 1) : 1;
   const currentEpisode =
     anime.episodesList.find((e) => e.number === epNumber) ||
-    anime.episodesList[0];
+    anime.episodesList[0] || {
+      id: `ep-${epNumber}`,
+      number: epNumber,
+      title: `Episode ${epNumber}`,
+      thumbnail: anime.coverImage,
+      duration: "24m",
+      airDate: "Broadcast",
+    };
 
   const prevEp = epNumber > 1 ? epNumber - 1 : null;
   const nextEp = epNumber < anime.episodesList.length ? epNumber + 1 : null;
@@ -118,6 +125,7 @@ export default async function WatchAnimePage({
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                aria-label={`Add ${anime.title} to watchlist`}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface-elevated border border-border text-12 font-medium text-text-secondary hover:text-text-primary transition-colors"
               >
                 <PlusIcon className="w-3.5 h-3.5" />
@@ -174,7 +182,7 @@ export default async function WatchAnimePage({
           </div>
         </div>
 
-        {/* Right Column (Desktop) / Mobile Drawer: Episode Selector */}
+        {/* Right Column: Episode Selector */}
         <EpisodeSelector
           animeSlug={anime.slug}
           currentEpisode={epNumber}

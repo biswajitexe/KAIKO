@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getAnimeDetails } from "@/lib/mock-data";
+import { getRealAnimeDetail } from "@/lib/data-loader";
 import { MediaDetailView } from "@/components/media-detail-view";
 
 interface AnimePageProps {
@@ -10,7 +10,7 @@ export async function generateMetadata({
   params,
 }: AnimePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const anime = getAnimeDetails(slug);
+  const anime = await getRealAnimeDetail(slug);
 
   return {
     title: `${anime.title} — KAIYO Anime`,
@@ -20,7 +20,7 @@ export async function generateMetadata({
 
 export default async function AnimeDetailPage({ params }: AnimePageProps) {
   const { slug } = await params;
-  const anime = getAnimeDetails(slug);
+  const anime = await getRealAnimeDetail(slug);
 
   return <MediaDetailView type="anime" media={anime} />;
 }

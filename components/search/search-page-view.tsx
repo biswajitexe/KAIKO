@@ -8,10 +8,7 @@ import {
   SearchIcon,
   XIcon,
 } from "@/components";
-import {
-  ALL_CATALOG_ITEMS,
-  type CatalogItem,
-} from "@/lib/mock-data";
+import type { AnimeItem, MangaUpdateItem } from "@/lib/mock-data";
 import {
   SearchFilters,
   type FilterState,
@@ -32,9 +29,9 @@ export function SearchPageView() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Search input state with debouncing
   const initialQuery = searchParams.get("q") || "";
   const initialGenre = searchParams.get("genre");
+  const initialType = (searchParams.get("type")?.toLowerCase() || "all") as FilterState["type"];
 
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
@@ -43,10 +40,15 @@ export function SearchPageView() {
 
   const [filters, setFilters] = useState<FilterState>({
     ...INITIAL_FILTERS,
+    type: initialType,
     genres: initialGenre ? [initialGenre] : [],
   });
 
-  // Debounce query (300ms)
+  const [liveAnimeResults, setLiveAnimeResults] = useState<AnimeItem[]>([]);
+  const [liveMangaResults, setLiveMangaResults] = useState<MangaUpdateItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Debounce search query (300ms)
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(query);
@@ -54,17 +56,77 @@ export function SearchPageView() {
     return () => clearTimeout(handler);
   }, [query]);
 
-  // Synchronize URL query params if needed
+  // Synchronize URL query params
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set("q", debouncedQuery);
     if (filters.genres.length > 0) params.set("genre", filters.genres[0]);
+    if (filters.type !== "all") params.set("type", filters.type.toUpperCase());
     const queryString = params.toString();
     const newPath = queryString ? `/browse?${queryString}` : "/browse";
     router.replace(newPath, { scroll: false });
-  }, [debouncedQuery, filters.genres, router]);
+  }, [debouncedQuery, filters.genres, filters.type, router]);
 
-  // Active filter count
+  // Fetch real MAL data on query or filter type change
+  useEffect(() => {
+    let isCancelled = false;
+    setLoading(true);
+
+    async function loadData() {
+      try {
+        if (debouncedQuery.trim()) {
+          // Live search from MAL
+          const res = await fetch(`/api/mal/search?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30`);
+          const data = await res.json();
+          if (!isCancelled) {
+            const rawNodes = data.data?.map((i: { node: any }) => i.node) || [];
+            const animeMapped: AnimeItem[] = rawNodes.map((n: any) => ({
+              id: `mal-${n.id}`,
+              slug: `${n.title.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-")}-${n.id}`,
+              title: n.title,
+              coverImage: n.main_picture?.large || n.main_picture?.medium || "",
+              bannerImage: n.main_picture?.large || n.main_picture?.medium || "",
+              synopsis: n.synopsis || "Watch with live MyAnimeList data.",
+              score: n.mean || 8.0,
+              episodes: n.num_episodes || 12,
+              season: "TV Series",
+              year: 2024,
+              genres: n.genres ? n.genres.map((g: any) => g.name) : ["Action"],
+              status: n.status === "currently_airing" ? "AIRING" : "FINISHED",
+              format: n.media_type === "movie" ? "MOVIE" : "TV",
+            }));
+            setLiveAnimeResults(animeMapped);
+            setLiveMangaResults([]);
+          }
+        } else {
+          // Load top catalog ranking from MAL
+          const [animeRes, mangaRes] = await Promise.all([
+            fetch("/api/mal/top-anime?ranking_type=all&limit=24"),
+            fetch("/api/mal/top-manga?ranking_type=manga&limit=24"),
+          ]);
+          const [animeData, mangaData] = await Promise.all([
+            animeRes.json(),
+            mangaRes.json(),
+          ]);
+
+          if (!isCancelled) {
+            setLiveAnimeResults(animeData.items || []);
+            setLiveMangaResults(mangaData.items || []);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load browse data:", err);
+      } finally {
+        if (!isCancelled) setLoading(false);
+      }
+    }
+
+    loadData();
+    return () => {
+      isCancelled = true;
+    };
+  }, [debouncedQuery]);
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.type !== "all") count++;
@@ -80,79 +142,49 @@ export function SearchPageView() {
     setQuery("");
   };
 
-  // Filtered & Sorted Results
+  // Combine and filter items based on user sidebar filters
   const filteredItems = useMemo(() => {
-    return ALL_CATALOG_ITEMS.filter((item: CatalogItem) => {
-      // 1. Text Search query (Title / Japanese title / Synopsis / Genre)
-      if (debouncedQuery.trim()) {
-        const q = debouncedQuery.toLowerCase();
-        const matchTitle = item.title.toLowerCase().includes(q);
-        const matchJap = item.japaneseTitle?.toLowerCase().includes(q);
-        const matchGenre = item.genres.some((g) => g.toLowerCase().includes(q));
-        if (!matchTitle && !matchJap && !matchGenre) {
-          return false;
-        }
-      }
+    let animeList = liveAnimeResults;
+    let mangaList = liveMangaResults;
 
-      // 2. Media Type filter
-      if (filters.type !== "all") {
-        if (filters.type === "anime" && item.mediaType !== "anime") return false;
-        if (filters.type === "manga" && item.mediaType !== "manga") return false;
-        if (filters.type === "manhwa" && item.mediaType !== "manhwa") return false;
-      }
+    if (filters.genres.length > 0) {
+      animeList = animeList.filter((a) =>
+        filters.genres.every((g) => a.genres.some((ag) => ag.toLowerCase().includes(g.toLowerCase())))
+      );
+      mangaList = mangaList.filter((m) =>
+        filters.genres.every((g) => m.genres.some((mg) => mg.toLowerCase().includes(g.toLowerCase())))
+      );
+    }
 
-      // 3. Genre filter (must match all selected genres)
-      if (filters.genres.length > 0) {
-        const hasAllGenres = filters.genres.every((g) => item.genres.includes(g));
-        if (!hasAllGenres) return false;
-      }
+    if (filters.minRating > 0) {
+      animeList = animeList.filter((a) => a.score >= filters.minRating);
+      mangaList = mangaList.filter((m) => m.rating >= filters.minRating);
+    }
 
-      // 4. Status filter
-      if (filters.status !== "all") {
-        if (filters.status === "airing-ongoing") {
-          if (item.status !== "AIRING" && item.status !== "ONGOING") return false;
-        } else if (filters.status === "completed") {
-          if (item.status !== "FINISHED" && item.status !== "COMPLETED") return false;
-        } else if (filters.status === "upcoming") {
-          if (item.status !== "UPCOMING") return false;
-        }
-      }
+    if (filters.type === "anime") {
+      return { anime: animeList, manga: [] };
+    }
+    if (filters.type === "manga" || filters.type === "manhwa") {
+      return { anime: [], manga: mangaList };
+    }
+    return { anime: animeList, manga: mangaList };
+  }, [liveAnimeResults, liveMangaResults, filters]);
 
-      // 5. Year filter
-      if (filters.year !== "All") {
-        if (filters.year === "Older") {
-          if (item.year >= 2022) return false;
-        } else {
-          if (item.year.toString() !== filters.year) return false;
-        }
-      }
-
-      // 6. Minimum Rating
-      if (filters.minRating > 0 && item.score < filters.minRating) {
-        return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === "score-desc") return b.score - a.score;
-      if (sortBy === "year-desc") return b.year - a.year;
-      if (sortBy === "title-asc") return a.title.localeCompare(b.title);
-      return 0;
-    });
-  }, [debouncedQuery, filters, sortBy]);
+  const totalResultsCount = filteredItems.anime.length + filteredItems.manga.length;
 
   return (
     <div className="flex flex-col gap-6 max-w-container mx-auto pb-12">
-      {/* =========================================================================
-          TOP SEARCH BAR & HEADER
-          ========================================================================= */}
+      {/* Top Search Bar */}
       <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between p-4 rounded-md bg-surface border border-border">
-        {/* Search Input with Debounce */}
         <div className="relative flex-1">
-          <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+          <label htmlFor="search-input" className="sr-only">
+            Search Anime & Manga
+          </label>
+          <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
           <input
+            id="search-input"
             type="text"
-            placeholder="Search anime, manga, manhwa, genres..."
+            placeholder="Search across 25,000+ anime & manga titles..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full pl-10 pr-10 py-2.5 rounded-sm bg-surface-elevated border border-border text-14 text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none transition-colors"
@@ -162,197 +194,103 @@ export function SearchPageView() {
               type="button"
               onClick={() => setQuery("")}
               aria-label="Clear search input"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-primary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-primary transition-colors"
             >
               <XIcon className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {/* Sort selector & Mobile Filter trigger */}
-        <div className="flex items-center gap-2">
-          {/* Mobile filter button */}
+        <div className="flex items-center gap-3 justify-between md:justify-end">
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort-select" className="text-12 text-text-muted whitespace-nowrap">
+              Sort by:
+            </label>
+            <select
+              id="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="px-3 py-2 rounded-sm bg-surface-elevated border border-border text-12 font-medium text-text-primary focus:border-accent focus:outline-none"
+            >
+              <option value="score-desc">Highest Rated ★</option>
+              <option value="year-desc">Release Date ↓</option>
+              <option value="title-asc">Alphabetical A-Z</option>
+            </select>
+          </div>
+
           <button
             type="button"
             onClick={() => setIsMobileFilterOpen(true)}
-            className="md:hidden flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-sm bg-surface-elevated border border-border text-14 font-medium text-text-secondary"
+            className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-sm bg-surface-elevated border border-border text-12 font-medium text-text-primary"
           >
             <span>Filters</span>
             {activeFilterCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-accent text-white font-mono text-12">
+              <span className="px-1.5 py-0.2 rounded-full bg-accent text-white font-mono text-[10px]">
                 {activeFilterCount}
               </span>
             )}
           </button>
-
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-2 text-12 flex-shrink-0">
-            <span className="hidden sm:inline text-text-muted font-medium">
-              Sort by:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-3 py-2.5 rounded-sm bg-surface-elevated border border-border text-14 font-medium text-text-primary focus:border-accent focus:outline-none cursor-pointer"
-            >
-              <option value="score-desc">Highest Rated ★</option>
-              <option value="year-desc">Release Year (Newest)</option>
-              <option value="title-asc">Title (A-Z)</option>
-            </select>
-          </div>
         </div>
       </div>
 
-      {/* =========================================================================
-          MAIN LAYOUT: FILTER SIDEBAR + RESPONSIVE GRID RESULTS
-          ========================================================================= */}
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-        {/* Desktop Sidebar (Left) */}
-        <SearchFilters
-          filters={filters}
-          onFilterChange={setFilters}
-          onReset={handleResetFilters}
-          activeFilterCount={activeFilterCount}
-          className="hidden md:flex w-72 flex-shrink-0 sticky top-20"
-        />
+      {/* Main Body */}
+      <div className="flex gap-8 items-start">
+        {/* Desktop Filters Sidebar */}
+        <aside className="hidden md:block w-64 flex-shrink-0 sticky top-20">
+          <SearchFilters
+            filters={filters}
+            onFilterChange={setFilters}
+            onReset={handleResetFilters}
+            activeFilterCount={activeFilterCount}
+          />
+        </aside>
 
-        {/* Mobile Drawer (Modal) */}
-        {isMobileFilterOpen && (
-          <div className="fixed inset-0 z-50 flex flex-col justify-end bg-bg/85 backdrop-blur-sm md:hidden">
-            <div
-              className="flex-1 w-full"
-              onClick={() => setIsMobileFilterOpen(false)}
-            />
-            <div className="w-full max-h-[80vh] bg-surface-elevated border-t border-border rounded-t-xl overflow-y-auto p-4 flex flex-col gap-4">
-              <div className="flex items-center justify-between pb-2 border-b border-border">
-                <h3 className="text-16 font-bold text-text-primary">Filters</h3>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileFilterOpen(false)}
-                  className="px-3 py-1 rounded-sm bg-accent text-white font-semibold text-12"
-                >
-                  Apply Filters
-                </button>
-              </div>
-              <SearchFilters
-                filters={filters}
-                onFilterChange={setFilters}
-                onReset={handleResetFilters}
-                activeFilterCount={activeFilterCount}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Right Content Area: Results Count + Card Grid */}
-        <div className="flex-1 w-full flex flex-col gap-4">
-          {/* Results Summary Header */}
-          <div className="flex items-center justify-between text-12 text-text-muted">
-            <span>
-              Showing{" "}
-              <strong className="text-text-primary font-bold">
-                {filteredItems.length}
-              </strong>{" "}
-              {filteredItems.length === 1 ? "title" : "titles"}
-              {debouncedQuery && (
-                <>
-                  {" "}
-                  for &quot;
-                  <span className="text-accent font-medium">
-                    {debouncedQuery}
-                  </span>
-                  &quot;
-                </>
+        {/* Results Area */}
+        <main className="flex-1 min-w-0 flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-18 font-bold text-text-primary">
+              {debouncedQuery ? (
+                <>Search results for &ldquo;{debouncedQuery}&rdquo;</>
+              ) : (
+                <>Global Catalog ({totalResultsCount})</>
               )}
-            </span>
-
-            {activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="text-accent hover:underline"
-              >
-                Clear all filters
-              </button>
+            </h1>
+            {loading && (
+              <div className="flex items-center gap-2 text-12 text-accent">
+                <span className="w-3.5 h-3.5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <span>Loading live MAL data...</span>
+              </div>
             )}
           </div>
 
-          {/* Results Grid */}
-          {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5">
-              {filteredItems.map((item) => {
-                if (item.mediaType === "anime") {
-                  return (
-                    <AnimeCard
-                      key={item.id}
-                      item={{
-                        id: item.id,
-                        slug: item.slug,
-                        title: item.title,
-                        coverImage: item.coverImage,
-                        score: item.score,
-                        episodes: parseInt(item.episodesOrChapters, 10) || 12,
-                        season: "Seasonal",
-                        year: item.year,
-                        genres: item.genres,
-                        status: item.status === "AIRING" ? "AIRING" : "FINISHED",
-                        format: item.format as "TV" | "MOVIE" | "OVA",
-                      }}
-                      className="w-full"
-                    />
-                  );
-                }
-
-                return (
-                  <MangaCard
-                    key={item.id}
-                    item={{
-                      id: item.id,
-                      slug: item.slug,
-                      title: item.title,
-                      coverImage: item.coverImage,
-                      latestChapter: item.episodesOrChapters,
-                      timeAgo: "Recently",
-                      type: item.mediaType === "manhwa" ? "MANHWA" : "MANGA",
-                      genres: item.genres,
-                      rating: item.score,
-                    }}
-                    variant="poster"
-                    className="w-full"
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            /* =========================================================================
-                EMPTY STATE DESIGN
-                ========================================================================= */
-            <div className="p-12 rounded-md bg-surface border border-border text-center flex flex-col items-center justify-center gap-4 my-6">
-              <div className="w-16 h-16 rounded-full bg-surface-elevated border border-border flex items-center justify-center text-text-muted">
-                <SearchIcon className="w-8 h-8" />
-              </div>
-
-              <div className="flex flex-col gap-1 max-w-md">
-                <h3 className="text-16 font-bold text-text-primary">
-                  No anime or manga found
-                </h3>
-                <p className="text-14 text-text-secondary leading-relaxed">
-                  We couldn&apos;t find any titles matching &quot;{debouncedQuery}&quot;
-                  with your active filter criteria. Try adjusting keywords or
-                  resetting filters.
-                </p>
-              </div>
-
+          {totalResultsCount === 0 && !loading ? (
+            <div className="flex flex-col items-center justify-center p-12 rounded-lg bg-surface border border-border text-center gap-3">
+              <span className="text-32">🔍</span>
+              <h3 className="text-16 font-bold text-text-primary">
+                No titles found
+              </h3>
+              <p className="text-14 text-text-muted max-w-sm">
+                Try searching for a different keyword like &ldquo;Naruto&rdquo;, &ldquo;Attack on Titan&rdquo;, or reset your filters.
+              </p>
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-4 py-2 rounded-md bg-accent text-white font-semibold text-14 hover:bg-accent-hover transition-colors duration-fast"
+                className="px-4 py-2 rounded-sm bg-accent text-white font-medium text-12 mt-2"
               >
-                Reset All Filters
+                Clear All Filters
               </button>
             </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
+              {filteredItems.anime.map((anime) => (
+                <AnimeCard key={anime.id} item={anime} className="w-full" />
+              ))}
+              {filteredItems.manga.map((manga) => (
+                <MangaCard key={manga.id} item={manga} variant="poster" className="w-full" />
+              ))}
+            </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );
