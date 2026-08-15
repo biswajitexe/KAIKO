@@ -1,0 +1,139 @@
+/**
+ * Design Tokens — Anime & Manga Media Platform
+ * 
+ * Aesthetic Philosophy:
+ * - Content-first dark UI density (Netflix / Crunchyroll / Webtoon inspired)
+ * - Near-black background (not harsh #000000)
+ * - Single high-contrast accent color (media orange)
+ * - System-native sans-serif typography
+ * - Zero AI clichés: no purple glow, no gradients, no glassmorphism
+ */
+
+:root {
+  /* ==========================================================================
+     COLOR TOKENS
+     ========================================================= */
+
+  /* Backgrounds */
+  --color-bg: #0d0e12;
+  --color-bg-subtle: #13151b;
+  --color-bg-elevated: #1a1d24;
+  --color-bg-overlay: rgba(13, 14, 18, 0.85);
+
+  /* Reader Canvas (Optimized for high-contrast manga / webtoon reading) */
+  --color-reader-bg: #08090b;
+  --color-reader-surface: #111317;
+
+  /* Surfaces & Cards */
+  --color-surface: #16181f;
+  --color-surface-subtle: #1c1f28;
+  --color-surface-elevated: #232733;
+  --color-surface-active: #2c3140;
+
+  /* Borders & Dividers */
+  --color-border: #272b38;
+  --color-border-subtle: #1e222c;
+  --color-border-strong: #3a4052;
+
+  /* Text & Foreground */
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #8c92a4;
+  --color-text-inverse: #0d0e12;
+
+  /* Single Unified Accent */
+  --color-accent: #f25b2a;
+  --color-accent-hover: #ff7043;
+  --color-accent-active: #d94a1b;
+  --color-accent-subtle: rgba(242, 91, 42, 0.12);
+  --color-accent-contrast: #ffffff;
+
+  /* Semantic Feedback (Strict & Muted) */
+  --color-status-success: #22c55e;
+  --color-status-warning: #eab308;
+  --color-status-error: #ef4444;
+  --color-status-info: #3b82f6;
+
+  /* ==========================================================================
+     TYPOGRAPHY TOKENS
+     ========================================================================== */
+
+  /* System-Native Sans-Serif Font Stack */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Type Scale (12 / 14 / 16 / 20 / 28 / 36px) */
+  --font-size-12: 0.75rem;     /* 12px - Badges, metadata, timestamps */
+  --font-size-14: 0.875rem;    /* 14px - Secondary labels, nav items, captions */
+  --font-size-16: 1rem;        /* 16px - Body text, default reading size */
+  --font-size-20: 1.25rem;     /* 20px - Section headers, card titles */
+  --font-size-28: 1.75rem;     /* 28px - Series titles, modal headers */
+  --font-size-36: 2.25rem;     /* 36px - Hero display titles, page headers */
+
+  /* Line Heights */
+  --line-height-12: 1rem;       /* 16px */
+  --line-height-14: 1.25rem;    /* 20px */
+  --line-height-16: 1.5rem;     /* 24px */
+  --line-height-20: 1.75rem;    /* 28px */
+  --line-height-28: 2.25rem;    /* 36px */
+  --line-height-36: 2.75rem;    /* 44px */
+
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.04em;
+
+  /* ==========================================================================
+     SPACING & LAYOUT TOKENS
+     ========================================================================== */
+
+  /* Spacing Scale (4 / 8 / 12 / 16 / 24 / 32 / 48px + extended scale) */
+  --spacing-4: 0.25rem;     /* 4px  - Compact gap, badge padding */
+  --spacing-8: 0.5rem;      /* 8px  - Button icon gap, micro padding */
+  --spacing-12: 0.75rem;    /* 12px - Grid gap compact, input padding-y */
+  --spacing-16: 1rem;       /* 16px - Standard component padding, card gap */
+  --spacing-24: 1.5rem;     /* 24px - Section spacing, header padding */
+  --spacing-32: 2rem;       /* 32px - Module spacing, generous gutters */
+  --spacing-48: 3rem;       /* 48px - Major content section separation */
+  --spacing-64: 4rem;       /* 64px - Hero and container margins */
+
+  /* Container Constraints */
+  --container-max-width: 1440px;
+  --reader-max-width: 840px;
+
+  /* ==========================================================================
+     BORDER RADIUS TOKENS
+     ========================================================================== */
+  --radius-none: 0px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* ==========================================================================
+     ELEVATION & TRANSITIONS
+     ========================================================================== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 12px 24px -4px rgba(0, 0, 0, 0.75);
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index Scale */
+  --z-base: 0;
+  --z-elevate: 10;
+  --z-sticky: 20;
+  --z-header: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+}
