@@ -92,7 +92,8 @@ export async function getMALAccessToken(): Promise<string> {
   const clientSecret = process.env.MAL_CLIENT_SECRET;
 
   if (!clientId) {
-    throw new Error("MAL_CLIENT_ID is missing. Please configure it in your .env.local file.");
+    console.warn("[MAL Service] MAL_CLIENT_ID is not configured in environment variables.");
+    return "";
   }
 
   // If Client Secret is available, exchange for OAuth2 access token
@@ -138,6 +139,9 @@ export async function getMALAccessToken(): Promise<string> {
  */
 async function malFetch<T>(endpoint: string, searchParams: Record<string, string> = {}): Promise<T> {
   const token = await getMALAccessToken();
+  if (!token) {
+    return { data: [] } as unknown as T;
+  }
   const url = new URL(`${MAL_API_BASE_URL}${endpoint}`);
 
   Object.entries(searchParams).forEach(([key, value]) => {
