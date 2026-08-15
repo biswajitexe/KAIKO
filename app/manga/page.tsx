@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MangaCard, ContentRow } from "@/components";
+import { MangaCard, ContentRow, InfiniteMangaCatalog } from "@/components";
 import { getTopManhwa, getLatestManga } from "@/lib/data-loader";
 
 export const metadata: Metadata = {
@@ -30,7 +30,7 @@ export default async function MangaCatalogPage() {
         </p>
       </div>
 
-      {/* Top Korean Manhwa Webtoons */}
+      {/* Top Korean Manhwa Webtoons Row */}
       <ContentRow
         title="Trending Korean Manhwa & Webtoons"
         subtitle="Full-color continuous vertical reading"
@@ -45,32 +45,21 @@ export default async function MangaCatalogPage() {
         ))}
       </ContentRow>
 
-      {/* Latest Manga Chapter Releases Grid */}
+      {/* Infinite Paginated Manga & Manhwa Grid */}
       <section className="flex flex-col gap-4">
-        <div className="flex items-baseline justify-between border-b border-border pb-3">
-          <div>
-            <h2 className="text-20 font-bold text-text-primary">
-              All Top Manga Series ({allManga.length})
-            </h2>
-            <p className="text-12 text-text-muted">
-              Live ranking and official updates from MyAnimeList
-            </p>
-          </div>
+        <div className="border-b border-border pb-3">
+          <h2 className="text-22 font-bold text-text-primary">
+            Complete Manga & Manhwa Catalog
+          </h2>
+          <p className="text-12 text-text-muted">
+            Explore Japanese Manga, Korean Manhwa Webtoons, and top-rated serializations with live loading
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
-          {allManga.map((manga) => (
-            <MangaCard
-              key={manga.id}
-              item={manga}
-              variant="poster"
-              className="w-full"
-            />
-          ))}
-        </div>
+        <InfiniteMangaCatalog initialItems={allManga} />
       </section>
 
-      {/* Popular Japanese Manga */}
+      {/* Popular Japanese Manga Row */}
       <ContentRow
         title="Popular Japanese Manga"
         subtitle="Shounen, Dark Fantasy, and Action serializations"

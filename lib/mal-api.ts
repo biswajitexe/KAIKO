@@ -146,7 +146,7 @@ async function malFetch<T>(endpoint: string, searchParams: Record<string, string
 /**
  * Searches the MyAnimeList catalog
  */
-export async function fetchAnimeList(query: string, limit = 20): Promise<MALSearchResponse> {
+export async function fetchAnimeList(query: string, limit = 24, offset = 0): Promise<MALSearchResponse> {
   if (!query.trim()) {
     return { data: [] };
   }
@@ -154,36 +154,41 @@ export async function fetchAnimeList(query: string, limit = 20): Promise<MALSear
   return malFetch<MALSearchResponse>("/anime", {
     q: query.trim(),
     limit: limit.toString(),
+    offset: offset.toString(),
     fields: "id,title,main_picture,mean,num_episodes,media_type,status,genres,synopsis,start_season,studios",
   });
 }
 
 /**
- * Fetches Top/Ranking Anime from MAL
- * @param rankingType "all" | "airing" | "upcoming" | "bypopularity" | "favorite"
+ * Fetches Top/Ranking Anime from MAL with pagination
+ * @param rankingType "all" | "airing" | "upcoming" | "bypopularity" | "favorite" | "movie" | "tv"
  */
 export async function fetchTopAnime(
-  rankingType: "all" | "airing" | "upcoming" | "bypopularity" | "favorite" = "all",
-  limit = 20
+  rankingType: "all" | "airing" | "upcoming" | "bypopularity" | "favorite" | "movie" | "tv" = "all",
+  limit = 24,
+  offset = 0
 ): Promise<MALSearchResponse> {
   return malFetch<MALSearchResponse>("/anime/ranking", {
     ranking_type: rankingType,
     limit: limit.toString(),
+    offset: offset.toString(),
     fields: "id,title,main_picture,mean,num_episodes,media_type,status,genres,synopsis,start_season,studios",
   });
 }
 
 /**
- * Fetches Top Manga / Manhwa from MAL
+ * Fetches Top Manga / Manhwa from MAL with pagination
  * @param rankingType "all" | "manga" | "manhwa" | "bypopularity" | "favorite"
  */
 export async function fetchTopManga(
   rankingType: "all" | "manga" | "manhwa" | "bypopularity" | "favorite" = "manga",
-  limit = 20
+  limit = 24,
+  offset = 0
 ): Promise<MALSearchResponse> {
   return malFetch<MALSearchResponse>("/manga/ranking", {
     ranking_type: rankingType,
     limit: limit.toString(),
+    offset: offset.toString(),
     fields: "id,title,main_picture,mean,num_chapters,media_type,status,genres,synopsis,start_date",
   });
 }

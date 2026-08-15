@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AnimeCard, ContentRow } from "@/components";
+import { AnimeCard, ContentRow, InfiniteAnimeCatalog } from "@/components";
 import {
   getAiringAnime,
   getTrendingAnime,
@@ -8,13 +8,13 @@ import {
 
 export const metadata: Metadata = {
   title: "Anime Catalog & Seasonal Streams — KAIYO",
-  description: "Browse trending seasonal anime, top-rated TV series, movies, and upcoming premieres.",
+  description: "Browse 25,000+ trending seasonal anime, top-rated TV series, movies, and upcoming premieres powered by MyAnimeList.",
 };
 
 export const revalidate = 300;
 
 export default async function AnimeCatalogPage() {
-  const [airingAnime, allAnime, upcomingAnime] = await Promise.all([
+  const [airingAnime, initialAllAnime, upcomingAnime] = await Promise.all([
     getAiringAnime(12),
     getTrendingAnime(24),
     getUpcomingAnime(12),
@@ -22,20 +22,20 @@ export default async function AnimeCatalogPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-container mx-auto pb-16">
-      {/* Header */}
+      {/* Header Banner */}
       <div className="p-6 rounded-lg bg-surface border border-border flex flex-col gap-2">
         <span className="text-12 font-mono uppercase tracking-widest text-accent font-semibold">
-          ANIME ARCHIVE & SIMULCASTS
+          LIVE MYANIMELIST DATABASE
         </span>
         <h1 className="text-24 sm:text-32 font-bold text-text-primary">
-          Explore All Anime
+          Explore All Anime Catalog
         </h1>
         <p className="text-14 text-text-secondary max-w-2xl">
-          Watch seasonal broadcast anime, legendary classics, movies, and OVAs with live MyAnimeList data.
+          Browse thousands of seasonal broadcast anime, legendary classics, blockbuster movies, and OVAs with live official MyAnimeList community ratings.
         </p>
       </div>
 
-      {/* Airing This Season */}
+      {/* Airing This Season Row */}
       <ContentRow
         title="Airing This Season"
         subtitle="Currently broadcasting weekly simulcasts"
@@ -46,24 +46,18 @@ export default async function AnimeCatalogPage() {
         ))}
       </ContentRow>
 
-      {/* All Anime Grid */}
+      {/* Infinite Paginated Grid for All Anime */}
       <section className="flex flex-col gap-4">
-        <div className="flex items-baseline justify-between border-b border-border pb-3">
-          <div>
-            <h2 className="text-20 font-bold text-text-primary">
-              All Top Rated Anime ({allAnime.length})
-            </h2>
-            <p className="text-12 text-text-muted">
-              Live ranking from global community scores
-            </p>
-          </div>
+        <div className="border-b border-border pb-3">
+          <h2 className="text-22 font-bold text-text-primary">
+            Complete Anime Archive
+          </h2>
+          <p className="text-12 text-text-muted">
+            Filter by Airing, Popularity, Movies, and load endless titles from MyAnimeList
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
-          {allAnime.map((anime) => (
-            <AnimeCard key={anime.id} item={anime} className="w-full" />
-          ))}
-        </div>
+        <InfiniteAnimeCatalog initialItems={initialAllAnime} />
       </section>
 
       {/* Most Anticipated Upcoming */}
