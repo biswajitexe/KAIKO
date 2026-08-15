@@ -11,6 +11,7 @@ import {
   ChevronRightIcon as ArrowRightIcon,
 } from "@/components/icons";
 import type { FeaturedItem } from "@/lib/mock-data";
+import { useWatchlist } from "@/lib/watchlist-store";
 import { cn } from "@/lib/utils";
 
 interface HeroCarouselProps {
@@ -25,6 +26,7 @@ export function HeroCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const { isSaved, toggle } = useWatchlist();
 
   const switchSlide = useCallback((newIndex: number) => {
     setIsTransitioning(true);
@@ -181,11 +183,16 @@ export function HeroCarousel({
 
             <button
               type="button"
-              aria-label={`Add ${currentItem.title} to watchlist`}
-              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-md bg-surface-elevated/90 backdrop-blur-md border border-border text-text-primary font-medium text-14 hover:border-border-strong hover:bg-surface-active transition-colors duration-fast focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+              onClick={() => toggle(currentItem, currentItem.type as "anime" | "manga")}
+              aria-label={`Toggle ${currentItem.title} in watchlist`}
+              className={cn(
+                "inline-flex items-center gap-2 px-3.5 py-2.5 rounded-md backdrop-blur-md border text-14 font-medium transition-all duration-fast focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none cursor-pointer",
+                isSaved(currentItem.slug) || isSaved(currentItem.id)
+                  ? "bg-accent/20 border-accent text-accent font-semibold"
+                  : "bg-surface-elevated/90 border-border text-text-primary hover:border-border-strong hover:bg-surface-active"
+              )}
             >
-              <PlusIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Watchlist</span>
+              <span>{isSaved(currentItem.slug) || isSaved(currentItem.id) ? "✓ In Watchlist" : "+ Watchlist"}</span>
             </button>
 
             <Link

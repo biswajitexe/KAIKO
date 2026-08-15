@@ -16,6 +16,7 @@ import type {
   MangaFullDetail,
   MangaUpdateItem,
 } from "@/lib/mock-data";
+import { useWatchlist } from "@/lib/watchlist-store";
 import { cn } from "@/lib/utils";
 
 type TabType = "episodes-or-chapters" | "related" | "reviews";
@@ -29,7 +30,7 @@ export function MediaDetailView({ type, media }: MediaDetailViewProps) {
   const [activeTab, setActiveTab] = useState<TabType>("episodes-or-chapters");
   const [chapterSortAsc, setChapterSortAsc] = useState(false);
   const [chapterSearch, setChapterSearch] = useState("");
-  const [isWatchlistAdded, setIsWatchlistAdded] = useState(false);
+  const { isSaved, toggle } = useWatchlist();
 
   const isAnime = type === "anime";
   const animeData = isAnime ? (media as AnimeFullDetail) : null;
@@ -180,16 +181,16 @@ export function MediaDetailView({ type, media }: MediaDetailViewProps) {
 
                 <button
                   type="button"
-                  onClick={() => setIsWatchlistAdded(!isWatchlistAdded)}
+                  onClick={() => toggle(media, isAnime ? "anime" : "manga")}
                   className={cn(
-                    "inline-flex items-center gap-2 px-4 py-2.5 rounded-md border font-medium text-14 transition-colors duration-fast focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none",
-                    isWatchlistAdded
-                      ? "bg-accent/15 border-accent text-accent"
+                    "inline-flex items-center gap-2 px-4 py-2.5 rounded-md border font-medium text-14 transition-colors duration-fast focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none cursor-pointer",
+                    isSaved(media.slug) || isSaved(media.id)
+                      ? "bg-accent/20 border-accent text-accent font-semibold"
                       : "bg-surface border-border text-text-primary hover:border-border-strong hover:bg-surface-elevated"
                   )}
                 >
                   <PlusIcon className="w-4 h-4" />
-                  <span>{isWatchlistAdded ? "In Watchlist" : "Add to Watchlist"}</span>
+                  <span>{isSaved(media.slug) || isSaved(media.id) ? "✓ In Watchlist" : "Add to Watchlist"}</span>
                 </button>
               </div>
             </div>
@@ -420,11 +421,11 @@ export function MediaDetailView({ type, media }: MediaDetailViewProps) {
 
         <button
           type="button"
-          onClick={() => setIsWatchlistAdded(!isWatchlistAdded)}
+          onClick={() => toggle(media, isAnime ? "anime" : "manga")}
           aria-label="Toggle watchlist"
           className={cn(
-            "p-2 rounded-sm border transition-colors duration-fast",
-            isWatchlistAdded
+            "p-2 rounded-sm border transition-colors duration-fast cursor-pointer",
+            isSaved(media.slug) || isSaved(media.id)
               ? "bg-accent/20 border-accent text-accent"
               : "bg-surface border-border text-text-secondary hover:text-text-primary"
           )}

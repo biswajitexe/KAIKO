@@ -216,6 +216,18 @@ export function VideoPlayerChrome({
         </button>
       )}
 
+      {/* Quick "Skip Intro (+85s)" Floating Button */}
+      {currentTime < 180 && (
+        <button
+          type="button"
+          onClick={() => skipTime(85)}
+          className="absolute bottom-16 right-5 z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-bg/90 hover:bg-accent text-white font-bold text-12 border border-border shadow-2xl backdrop-blur-md transition-all duration-fast hover:scale-105 cursor-pointer"
+        >
+          <SkipForwardIcon className="w-3.5 h-3.5" />
+          <span>Skip Intro (+85s)</span>
+        </button>
+      )}
+
       {/* =========================================================================
           TOP PLAYER HEADER (Visible with Controls)
           ========================================================================= */}
